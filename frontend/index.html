@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HHGoa / Voice RAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#f7f4ed; --ink:#17352b; --green:#0d503b; --green-2:#1b7255; --mint:#dbe8d9; --line:#d8ddd2; --muted:#708077; --pink:#ef6f87; --orange:#ed9562; --white:#fffdf8; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"DM Sans",sans-serif; }
+button, select { font:inherit; }
+button { cursor:pointer; }
+.page { min-height:100vh; overflow:hidden; position:relative; }
+.page:before { content:""; position:absolute; inset:0 0 auto; height:480px; background:linear-gradient(115deg,#dfe9dc 0%,#f7f4ed 54%,#f5e4d9 100%); z-index:-2; }
+.page:after { content:""; position:absolute; right:-100px; top:105px; width:390px; height:150px; border:1px solid rgba(13,80,59,.12); border-radius:50%; transform:rotate(-12deg); z-index:-1; }
+.shell { width:min(1240px,calc(100% - 48px)); margin:auto; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:28px 0; border-bottom:1px solid rgba(23,53,43,.15); }
+.brand { display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:.08em; font-size:12px; }
+.brand-mark { width:35px; height:35px; display:grid; place-items:center; color:var(--paper); background:var(--green); border-radius:50% 50% 50% 4px; font-family:"Instrument Serif",serif; font-size:22px; letter-spacing:0; }
+.brand strong { display:block; font-size:15px; letter-spacing:.13em; }
+.brand small { color:var(--muted); font-size:9px; letter-spacing:.18em; }
+.top-actions,.status { display:flex; align-items:center; gap:22px; }
+.language-count { font-size:11px; font-weight:700; letter-spacing:.12em; color:var(--green); }
+.status { gap:8px; color:var(--muted); font-size:12px; }
+.status-dot { width:8px; height:8px; background:#65ad77; border-radius:50%; box-shadow:0 0 0 4px rgba(101,173,119,.15); }
+.status-dot.offline { background:var(--pink); box-shadow:0 0 0 4px rgba(239,111,135,.15); }
+.select-wrap { position:relative; }
+select { appearance:none; border:1px solid var(--line); background:rgba(255,253,248,.65); color:var(--ink); border-radius:4px; padding:10px 31px 10px 12px; font-size:12px; font-weight:600; }
+.select-wrap:after { content:"v"; pointer-events:none; position:absolute; right:11px; top:7px; color:var(--green); }
+.hero { display:grid; grid-template-columns:1.08fr .92fr; gap:60px; align-items:center; min-height:515px; padding:68px 0 60px; }
+.kicker,.section-kicker { color:var(--pink); font-size:11px; font-weight:700; letter-spacing:.19em; text-transform:uppercase; }
+h1 { margin:16px 0 20px; max-width:650px; font-family:"Instrument Serif",serif; font-size:clamp(62px,8vw,108px); font-weight:400; line-height:.83; letter-spacing:0; }
+h1 em { color:var(--green-2); }
+.lede { max-width:480px; color:#52665c; font-size:17px; line-height:1.6; }
+.hero-note { display:flex; align-items:center; gap:11px; margin-top:30px; color:var(--muted); font-size:11px; letter-spacing:.05em; }
+.hero-note i { width:27px; height:1px; background:var(--orange); display:block; }
+.voice-panel { background:rgba(255,253,248,.72); border:1px solid rgba(23,53,43,.14); padding:25px; min-height:390px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 20px 50px rgba(23,53,43,.08); }
+.voice-panel-head { display:flex; justify-content:space-between; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.recording-label { color:var(--pink); display:flex; align-items:center; gap:7px; }
+.recording-label:before { content:""; width:6px; height:6px; background:var(--pink); border-radius:50%; }
+.mic-stage { display:grid; place-items:center; position:relative; min-height:240px; }
+.mic-stage:before,.mic-stage:after { content:""; position:absolute; border:1px solid rgba(13,80,59,.16); border-radius:50%; }
+.mic-stage:before { width:220px; height:220px; }
+.mic-stage:after { width:286px; height:170px; transform:rotate(27deg); border-color:rgba(239,111,135,.2); }
+.mic-button { width:154px; height:154px; border:0; border-radius:50%; background:var(--green); color:var(--white); position:relative; z-index:1; box-shadow:0 14px 0 rgba(13,80,59,.12),0 20px 40px rgba(13,80,59,.2); transition:transform .25s,background .25s; }
+.mic-button:hover { transform:translateY(-4px); }
+.mic-button:focus-visible { outline:3px solid var(--orange); outline-offset:6px; }
+.mic-button.recording { background:var(--pink); animation:breathe 1.25s ease-in-out infinite; }
+.mic-symbol { display:block; font-size:36px; line-height:1; margin-bottom:12px; }
+.mic-text { display:block; font-size:13px; font-weight:700; }
+.mic-subtext { display:block; margin-top:5px; color:#b8cec0; font-size:10px; }
+@keyframes breathe { 50% { transform:scale(1.06); box-shadow:0 0 0 18px rgba(239,111,135,.12),0 18px 38px rgba(13,80,59,.2); } }
+.waveform { height:34px; display:flex; justify-content:center; align-items:center; gap:4px; opacity:.25; }
+.waveform span { width:3px; height:8px; background:var(--green-2); border-radius:4px; transition:height .2s; }
+.recording + .waveform span { animation:wave .7s ease-in-out infinite alternate; }
+.recording + .waveform span:nth-child(2n) { animation-delay:.2s; }
+@keyframes wave { to { height:30px; background:var(--pink); } }
+.voice-status { text-align:center; color:var(--muted); font-size:12px; }
+.language-bar { display:flex; align-items:center; gap:24px; padding:18px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:auto; }
+.language-bar label { flex:none; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.14em; }
+.lang-btn { flex:none; border:0; border-bottom:2px solid transparent; padding:7px 0; color:var(--muted); background:transparent; font-size:12px; font-weight:600; }
+.lang-btn.active { color:var(--green); border-color:var(--pink); }
+.content { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:28px; padding:62px 0 75px; }
+.main-column { min-width:0; }
+.section-head { display:flex; align-items:end; justify-content:space-between; margin-bottom:14px; }
+.section-head h2 { margin:7px 0 0; font-size:22px; font-weight:600; letter-spacing:-.02em; }
+.question-card,.answer-card { padding:25px 28px; border:1px solid var(--line); background:var(--white); }
+.question-card { border-left:3px solid var(--orange); margin-bottom:13px; }
+.answer-card { min-height:155px; position:relative; }
+.answer-card:before { content:"\""; position:absolute; right:22px; top:2px; color:var(--mint); font-family:"Instrument Serif",serif; font-size:90px; line-height:1; }
+.label { color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.15em; }
+.question-text { margin-top:9px; font-size:17px; }
+.answer-text { position:relative; max-width:700px; margin-top:12px; font-size:18px; line-height:1.6; }
+.answer-text h3 { margin:18px 0 6px; font-size:18px; }
+.answer-text p { margin:0 0 12px; }
+.answer-text ul,.answer-text ol { margin:8px 0 14px 20px; padding:0; }
+.answer-text li { margin:5px 0; }
+.empty-copy { color:#9ba8a0; font-style:italic; }
+.citation-count { display:inline-flex; margin-top:18px; padding:6px 9px; background:var(--mint); color:var(--green); border-radius:20px; font-size:10px; font-weight:700; }
+.pipeline { margin:34px 0 48px; }
+.pipeline-track { display:grid; grid-template-columns:repeat(5,1fr); gap:0; margin-top:18px; }
+.stage { position:relative; padding-right:20px; color:var(--muted); font-size:11px; }
+.stage:not(:last-child):after { content:""; position:absolute; top:9px; left:25px; right:10px; height:1px; background:var(--line); }
+.stage-dot { width:19px; height:19px; position:relative; z-index:1; margin-bottom:10px; border:1px solid #b7c7bc; background:var(--paper); border-radius:50%; }
+.stage.done .stage-dot,.stage.active .stage-dot { background:var(--green); border-color:var(--green); box-shadow:0 0 0 5px rgba(13,80,59,.1); }
+.stage.done:not(:last-child):after { background:var(--green); }
+.stage.active { color:var(--green); font-weight:700; }
+.sources-head { margin-top:20px; }
+.source-card { border-top:1px solid var(--line); padding:19px 0; display:grid; grid-template-columns:1fr 105px; gap:20px; }
+.source-top { display:flex; justify-content:space-between; gap:12px; }
+.source-name { color:var(--green); font-size:12px; font-weight:700; }
+.source-score { color:var(--pink); font-size:11px; font-weight:700; }
+.source-text { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:9px; color:#65756d; font-size:13px; line-height:1.55; }
+.source-card.open .source-text { display:block; }
+.source-meta { margin-top:10px; color:#9aa59e; font-size:10px; }
+.expand-btn { align-self:start; border:0; background:var(--mint); color:var(--green); padding:8px 10px; font-size:10px; font-weight:700; }
+.side-column { display:flex; flex-direction:column; gap:28px; }
+.side-section { border-top:2px solid var(--green); padding-top:15px; }
+.side-section h3 { margin:7px 0 15px; font-size:15px; }
+.metrics { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+.metric { padding:15px 12px; background:var(--white); }
+.metric-value { display:block; margin-top:7px; color:var(--green); font-size:19px; font-weight:600; }
+.metric small { color:var(--muted); font-size:10px; }
+.examples { display:grid; gap:9px; }
+.example { border:1px solid var(--line); border-left:2px solid var(--orange); padding:12px; text-align:left; color:#52665c; background:transparent; font-size:12px; line-height:1.4; transition:background .2s,transform .2s; }
+.example:hover { background:var(--white); transform:translateX(3px); }
+.empty-panel { padding:15px 0; color:var(--muted); font-size:13px; line-height:1.5; }
+.error { color:#b64e63; background:#fbe8e8; padding:14px; font-size:13px; }
+.retry-btn { margin-top:12px; border:1px solid var(--pink); background:transparent; color:#b64e63; padding:9px 12px; font-size:11px; font-weight:700; }
+.guardrail { margin-top:30px; border-left:3px solid var(--green-2); padding:16px 18px; background:var(--mint); color:#476457; font-size:12px; line-height:1.5; }
+.guardrail strong { display:block; margin-bottom:5px; color:var(--green); font-size:10px; letter-spacing:.14em; }
+.footer { display:flex; justify-content:space-between; padding:20px 0 28px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; letter-spacing:.08em; }
+.footer strong { color:var(--pink); }
+@media (max-width:820px) { .shell { width:min(100% - 32px,600px); } .top-actions { gap:12px; } .language-count { display:none; } .hero { grid-template-columns:1fr; gap:35px; padding:48px 0 42px; min-height:0; } h1 { font-size:76px; } .voice-panel { min-height:350px; } .content { grid-template-columns:1fr; padding-top:45px; } .side-column { display:grid; grid-template-columns:1fr 1fr; align-items:start; } }
+@media (max-width:540px) { .topbar { align-items:flex-start; gap:14px; } .status { font-size:0; gap:7px; } .top-actions .select-wrap select { max-width:95px; } h1 { font-size:64px; } .lede { font-size:15px; } .voice-panel { padding:18px; } .mic-stage:before { width:190px; height:190px; } .mic-stage:after { width:245px; height:150px; } .mic-button { width:140px; height:140px; } .pipeline-track { grid-template-columns:1fr; gap:12px; } .stage { display:flex; align-items:center; gap:10px; padding:0; } .stage:not(:last-child):after { top:19px; bottom:-12px; left:9px; right:auto; width:1px; height:auto; } .stage-dot { flex:none; margin:0; } .source-card { grid-template-columns:1fr; gap:10px; } .source-top { display:block; } .source-score { display:block; margin-top:4px; } .side-column { display:flex; } .footer { display:block; line-height:1.8; } }
+</style>
+</head>
+<body>
+<main class="page"><div class="shell">
+<header class="topbar"><div class="brand"><span class="brand-mark">H</span><span><strong>HHGOA</strong><small>VOICE RAG / 2026</small></span></div><div class="top-actions"><span class="language-count">13 LANGUAGES</span><span class="status"><i class="status-dot" id="statusDot"></i><span id="statusText">API CONNECTED</span></span><div class="select-wrap"><select id="languageSelect" aria-label="Select language"><option>English</option><option>Hindi</option><option>Marathi</option><option>Telugu</option><option>Bengali</option><option>Tamil</option><option>Kannada</option><option>Malayalam</option><option>Gujarati</option><option>Punjabi</option><option>Urdu</option><option>Odia</option><option>Assamese</option></select></div></div></header>
+<section class="hero"><div><div class="kicker">A grounded conversation with Goa</div><h1>Ask. <em>Retrieve.</em><br>Know.</h1><p class="lede">Speak naturally. Get answers grounded in the HHGoa knowledge base, with every step of the journey visible.</p><div class="hero-note"><i></i><span>Knowledge, with a point of view.</span></div></div><div class="voice-panel"><div class="voice-panel-head"><span>VOICE INPUT</span><span class="recording-label" id="recordingLabel">READY TO LISTEN</span></div><div class="mic-stage"><button class="mic-button" id="recBtn" aria-label="Hold to speak"><span class="mic-symbol">MIC</span><span class="mic-text">Tap to speak</span><span class="mic-subtext">hold &amp; ask naturally</span></button><div class="waveform" id="waveform" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div><div class="voice-status" id="voiceStatus">Your question starts here</div></div></section>
+<nav class="language-bar" aria-label="Supported languages"><label>ASK IN</label><button class="lang-btn active">English</button><button class="lang-btn">Hindi</button><button class="lang-btn">Marathi</button><button class="lang-btn">Telugu</button><button class="lang-btn">Bengali</button><button class="lang-btn">Tamil</button><button class="lang-btn">Kannada</button><button class="lang-btn">Malayalam</button><button class="lang-btn">Gujarati</button></nav>
+<section class="content"><div class="main-column"><div class="section-head"><div><div class="section-kicker">The conversation</div><h2>What would you like to know?</h2></div></div><div class="question-card"><div class="label">YOUR QUESTION</div><div class="question-text" id="question">Your spoken question will appear here.</div></div><div class="answer-card"><div class="label">GROUNDED ANSWER</div><div class="answer-text empty-copy" id="answer">Ask a question to explore the knowledge base.</div><span class="citation-count" id="citationCount">0 sources</span></div><div class="guardrail"><strong>GROUNDING GUARDRAIL</strong>If the knowledge base cannot support an answer, the system says so instead of inventing information.</div><div class="pipeline"><div class="section-kicker">Under the hood</div><div class="pipeline-track" id="pipeline"><div class="stage"><div class="stage-dot"></div><span>Voice input</span></div><div class="stage"><div class="stage-dot"></div><span>Retrieval</span></div><div class="stage"><div class="stage-dot"></div><span>Reranking</span></div><div class="stage"><div class="stage-dot"></div><span>Generation</span></div><div class="stage"><div class="stage-dot"></div><span>Grounded answer</span></div></div></div><div class="section-head sources-head"><div><div class="section-kicker">Evidence, not magic</div><h2>Retrieved context</h2></div><span class="label" id="sourceCount">0 CHUNKS</span></div><div id="chunks" class="empty-panel">Relevant passages will collect here after your first question.</div></div><aside class="side-column"><section class="side-section"><div class="section-kicker">Performance</div><h3>Pipeline pulse</h3><div class="metrics"><div class="metric"><span class="label">TRANSCRIPTION</span><strong class="metric-value" id="asrMetric">-</strong><small>milliseconds</small></div><div class="metric"><span class="label">RETRIEVAL</span><strong class="metric-value" id="retrieveMetric">-</strong><small>milliseconds</small></div><div class="metric"><span class="label">RERANKING</span><strong class="metric-value" id="rerankMetric">-</strong><small>milliseconds</small></div><div class="metric"><span class="label">GENERATION</span><strong class="metric-value" id="generationMetric">-</strong><small>milliseconds</small></div><div class="metric"><span class="label">TOTAL LATENCY</span><strong class="metric-value" id="totalMetric">-</strong><small>milliseconds</small></div></div></section><section class="side-section"><div class="section-kicker">Start somewhere</div><h3>Try asking</h3><div class="examples"><button class="example">What are the best cultural experiences in Goa?</button><button class="example">Tell me about HHGoa and its community.</button><button class="example">What should I know before visiting Goa?</button><button class="example">Which local traditions should I explore?</button><button class="example">Explain the RAG pipeline in detail.</button></div></section></aside></section>
+<footer class="footer"><span>VOICE RAG / HHGOA 2026 · Grounded answers. Visible evidence.</span><strong>BUILT FOR HHGOA 2026</strong></footer>
+</div></main>
+<script>
+const API_BASE = "http://127.0.0.1:5055";
+const recBtn = document.getElementById("recBtn"), answerEl = document.getElementById("answer"), questionEl = document.getElementById("question"), chunksEl = document.getElementById("chunks"), statusDot = document.getElementById("statusDot"), statusText = document.getElementById("statusText"), stages = [...document.querySelectorAll(".stage")];
+let mediaRecorder, chunksBuf = [], isBusy = false;
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[char]));
+const setStage = current => stages.forEach((stage, index) => { stage.classList.toggle("done", index < current); stage.classList.toggle("active", index === current); });
+function setState(text, label, mode = "idle") { document.getElementById("voiceStatus").textContent = text; document.getElementById("recordingLabel").textContent = label; recBtn.classList.toggle("recording", mode === "recording"); recBtn.querySelector(".mic-text").textContent = mode === "recording" ? "Listening..." : mode === "busy" ? "Processing..." : "Tap to speak"; recBtn.disabled = mode === "busy"; }
+function markdownToHtml(markdown) { const safe = escapeHtml(markdown); return safe.split(/\n\s*\n/).map(block => { if (/^### /.test(block)) return `<h3>${block.slice(4)}</h3>`; if (/^[-*] /.test(block)) return `<ul>${block.split("\n").map(line => `<li>${line.replace(/^[-*] /, "")}</li>`).join("")}</ul>`; if (/^\d+\. /.test(block)) return `<ol>${block.split("\n").map(line => `<li>${line.replace(/^\d+\. /, "")}</li>`).join("")}</ol>`; return `<p>${block.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</p>`; }).join(""); }
+function showRetry() { if (!document.getElementById("retryBtn")) { const retry = document.createElement("button"); retry.id = "retryBtn"; retry.className = "retry-btn"; retry.textContent = "RETRY CONNECTION"; retry.addEventListener("click", checkHealth); answerEl.appendChild(retry); } }
+async function checkHealth() { statusText.textContent = "CHECKING API"; try { const response = await fetch(`${API_BASE}/health`); if (!response.ok) throw new Error(); statusDot.classList.remove("offline"); statusText.textContent = "API CONNECTED"; document.getElementById("retryBtn")?.remove(); } catch { statusDot.classList.add("offline"); statusText.textContent = "API OFFLINE"; } }
+function renderSources(retrieved) { document.getElementById("sourceCount").textContent = `${retrieved.length} CHUNKS`; if (!retrieved.length) { chunksEl.className = "empty-panel"; chunksEl.textContent = "No supporting passages were returned for this question."; return; } chunksEl.className = ""; chunksEl.innerHTML = retrieved.map((item, index) => { const score = item.rerank_score ?? item.retrieval_score ?? 0, chunk = item.chunk || {}; return `<article class="source-card"><div><div class="source-top"><span class="source-name">${escapeHtml(chunk.source || `Knowledge chunk ${index + 1}`)}</span><span class="source-score">RELEVANCE ${Number(score).toFixed(2)}</span></div><div class="source-text">${escapeHtml(chunk.text)}</div><div class="source-meta">CHUNK ${escapeHtml(chunk.id || String(index + 1))}</div></div><button class="expand-btn" type="button">EXPAND</button></article>`; }).join(""); chunksEl.querySelectorAll(".expand-btn").forEach(button => button.addEventListener("click", () => { const card = button.closest(".source-card"); card.classList.toggle("open"); button.textContent = card.classList.contains("open") ? "COLLAPSE" : "EXPAND"; })); }
+function renderResponse(data, clientMs) { questionEl.textContent = data.query_text || "No transcript returned."; answerEl.className = "answer-text"; answerEl.innerHTML = markdownToHtml(data.answer || "No answer returned."); document.getElementById("citationCount").textContent = `${(data.retrieved || []).length} sources`; renderSources(data.retrieved || []); const latency = data.latency || {}; document.getElementById("asrMetric").textContent = latency.asr_ms == null ? "-" : Math.round(latency.asr_ms); document.getElementById("retrieveMetric").textContent = Math.round(latency.retrieve_ms || 0); document.getElementById("rerankMetric").textContent = Math.round(latency.rerank_ms || 0); document.getElementById("generationMetric").textContent = Math.round(latency.generate_ms || 0); document.getElementById("totalMetric").textContent = Math.round(latency.total_ms || clientMs); setStage(5); }
+async function submitAudio() { const blob = new Blob(chunksBuf, {type:"audio/webm"}), form = new FormData(); form.append("file", blob, "query.webm"); await submitRequest(`${API_BASE}/ask/voice`, {method:"POST", body:form}); }
+async function submitText(query) { await submitRequest(`${API_BASE}/ask/text?query=${encodeURIComponent(query)}`, {method:"POST"}); }
+async function submitRequest(url, options) { isBusy = true; setState("Transcribing your question", "TRANSCRIBING", "busy"); answerEl.className = "answer-text"; answerEl.textContent = "Following the evidence..."; questionEl.textContent = "Preparing your question..."; setStage(0); const started = performance.now(); try { setTimeout(() => { if (isBusy) { setState("Retrieving relevant passages", "RETRIEVING", "busy"); setStage(1); } }, 350); setTimeout(() => { if (isBusy) { setState("Reranking the strongest evidence", "RERANKING", "busy"); setStage(2); } }, 700); setTimeout(() => { if (isBusy) { setState("Generating a grounded answer", "GENERATING", "busy"); setStage(3); } }, 1050); const response = await fetch(url, options); if (!response.ok) throw new Error(`Request failed (${response.status})`); const data = await response.json(); renderResponse(data, performance.now() - started); setState("Answer ready, grounded in retrieved context", "READY", "idle"); } catch (error) { statusDot.classList.add("offline"); statusText.textContent = "API UNAVAILABLE"; answerEl.className = "answer-text error"; answerEl.textContent = "Unable to connect to the RAG service."; showRetry(); chunksEl.className = "empty-panel"; chunksEl.textContent = "Retrieved context will appear when the API reconnects."; setStage(0); setState("Connection interrupted", "CHECK API", "idle"); console.error(error); } finally { isBusy = false; recBtn.disabled = false; } }
+async function startRecording() { if (isBusy) return; try { const stream = await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder = new MediaRecorder(stream); chunksBuf = []; mediaRecorder.ondataavailable = event => chunksBuf.push(event.data); mediaRecorder.onstop = submitAudio; mediaRecorder.start(); setState("Listening for your question...", "RECORDING", "recording"); setStage(0); } catch (error) { answerEl.className = "answer-text error"; answerEl.textContent = "Microphone permission is required to ask by voice."; setState("Microphone unavailable", "CHECK MIC", "idle"); console.error(error); } }
+function stopRecording() { if (!mediaRecorder || mediaRecorder.state !== "recording") return; mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(track => track.stop()); setState("Preparing your question", "PROCESSING", "busy"); }
+recBtn.addEventListener("mousedown", startRecording); recBtn.addEventListener("mouseup", stopRecording); recBtn.addEventListener("mouseleave", stopRecording); recBtn.addEventListener("touchstart", event => { event.preventDefault(); startRecording(); }, {passive:false}); recBtn.addEventListener("touchend", event => { event.preventDefault(); stopRecording(); }, {passive:false});
+document.querySelectorAll(".lang-btn").forEach(button => button.addEventListener("click", () => { document.querySelectorAll(".lang-btn").forEach(item => item.classList.remove("active")); button.classList.add("active"); document.getElementById("languageSelect").value = button.textContent; }));
+document.getElementById("languageSelect").addEventListener("change", event => document.querySelectorAll(".lang-btn").forEach(button => button.classList.toggle("active", button.textContent === event.target.value)));
+document.querySelectorAll(".example").forEach(button => button.addEventListener("click", () => { if (!isBusy) submitText(button.textContent); }));
+checkHealth();
+</script>
+</body>
+</html>

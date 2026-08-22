@@ -1,0 +1,30 @@
+Retrieval augmented generation, or RAG, is a technique that combines a
+retrieval system with a language model. Instead of relying solely on
+what the model learned during training, the system first searches a
+knowledge base for relevant passages, then feeds those passages to the
+model as context before it generates an answer. This grounds the
+answer in real, checkable source material and reduces hallucination.
+
+Chunking strategy affects retrieval quality because embedding models
+compress text into fixed-size vectors, and a chunk that mixes two
+unrelated topics produces a vector that represents neither topic well.
+Chunks that are too small lose context; chunks that are too large dilute
+the signal for any single fact. Sentence-window chunking retrieves at
+sentence-level precision while still giving the generator surrounding
+context. Semantic chunking groups sentences by topical similarity so
+chunk boundaries align with actual topic shifts rather than arbitrary
+character counts.
+
+A guardrail in a RAG system decides when NOT to answer. If the best
+retrieved passage has low similarity to the query, or a cross-encoder
+reranker scores it as not actually relevant, the system should abstain
+rather than let the language model improvise an answer from weak or
+irrelevant context. This is what keeps a RAG system honest under
+adversarial or out-of-domain questions.
+
+Latency in a voice RAG pipeline comes from several stages: speech
+recognition, query embedding, vector search, optional reranking, and
+generation. Speech recognition time scales with audio duration and
+model size, so teams optimizing for low latency typically use a small
+or quantized transcription model and measure the retrieval-and-generation
+stages separately from transcription time.

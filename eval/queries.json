@@ -1,0 +1,5 @@
+[
+  {"id": "q1", "text": "What is retrieval augmented generation?"},
+  {"id": "q2", "text": "Why does chunking strategy affect retrieval quality?"},
+  {"id": "q3", "text": "What is the capital of the moon?"}
+]

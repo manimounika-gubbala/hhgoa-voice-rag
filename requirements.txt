@@ -1,0 +1,11 @@
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+python-multipart==0.0.*
+pydantic==2.*
+faster-whisper==1.0.*
+sentence-transformers==3.*
+faiss-cpu==1.8.*
+numpy==1.26.*
+tenacity==8.*
+anthropic==0.34.*
+rich==13.*
