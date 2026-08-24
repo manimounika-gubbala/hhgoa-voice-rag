@@ -12,3 +12,4 @@ rich==13.9.4
 
 httpx==0.27.2
 sentence-transformers==3.4.1
+faiss-cpu==1.8.0
