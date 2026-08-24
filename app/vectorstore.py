@@ -23,8 +23,10 @@ from app.schemas import Chunk
 
 @lru_cache(maxsize=1)
 def get_embedder() -> SentenceTransformer:
-    return SentenceTransformer(settings.embed_model)
-
+    return SentenceTransformer(
+        settings.embed_model,
+        device="cpu",
+    )
 
 def embed_texts(texts: list[str]) -> np.ndarray:
     model = get_embedder()

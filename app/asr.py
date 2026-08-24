@@ -28,7 +28,7 @@ def _get_model() -> WhisperModel:
     )
 
 
-def warm_up():
+#def warm_up():
     """Call this once at server startup so the first real request isn't
     the one that pays model-load latency."""
     _get_model()

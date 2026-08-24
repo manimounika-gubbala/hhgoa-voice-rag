@@ -20,7 +20,10 @@ from app.vectorstore import VectorStore
 
 @lru_cache(maxsize=1)
 def get_reranker() -> CrossEncoder:
-    return CrossEncoder(settings.rerank_model)
+    return CrossEncoder(
+    settings.rerank_model,
+    device="cpu",
+)
 
 
 def retrieve_and_rerank(store: VectorStore, query: str) -> tuple[list[RetrievedChunk], float, float]:
